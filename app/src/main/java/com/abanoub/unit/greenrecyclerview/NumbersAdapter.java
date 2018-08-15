@@ -3,6 +3,7 @@ package com.abanoub.unit.greenrecyclerview;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +12,22 @@ import android.widget.TextView;
 
 public class NumbersAdapter extends RecyclerView.Adapter<NumbersAdapter.NumberViewHolder>{
 
+    private static int viewHolderCount;
+
     private int mNumberItems;
+
+    /*
+     * An on-click handler that we've defined to make it easy for an Activity to interface with
+     * our RecyclerView
+     */
+    private ListItemClickListener mOnClickListener;
+
+    /**
+     * The interface that receives onClick messages.
+     */
+    public interface ListItemClickListener{
+        void onListItemClick(int id);
+    }
 
     /**
      * Constructor for NumbersAdapter that accepts a number of items to display and the specification
@@ -19,8 +35,10 @@ public class NumbersAdapter extends RecyclerView.Adapter<NumbersAdapter.NumberVi
      *
      * @param numberItems Number of items to display in list
      */
-    public NumbersAdapter(int numberItems){
+    public NumbersAdapter(int numberItems, ListItemClickListener onClickListener){
         this.mNumberItems = numberItems;
+        viewHolderCount = 0;
+        mOnClickListener = onClickListener;
     }
 
     /**
@@ -39,7 +57,15 @@ public class NumbersAdapter extends RecyclerView.Adapter<NumbersAdapter.NumberVi
     public NumberViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         View view = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
-        return new NumberViewHolder(view);
+
+        NumberViewHolder numberViewHolder = new NumberViewHolder(view);
+
+        numberViewHolder.viewHolderIndex.setText("ViewHolder index:" + viewHolderCount);
+        int color = MaterialColor.getBackgroundForViewHolder(context, viewHolderCount);
+        numberViewHolder.itemView.setBackgroundColor(color);
+        viewHolderCount++;
+        Log.d(this.toString(), "count :" + viewHolderCount);
+        return numberViewHolder;
     }
 
     /**
@@ -72,10 +98,13 @@ public class NumbersAdapter extends RecyclerView.Adapter<NumbersAdapter.NumberVi
     /**
      * Cache of the children views for a list item.
      */
-    public class NumberViewHolder extends RecyclerView.ViewHolder{
+    public class NumberViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         // Will display the position in the list, ie 0 through getItemCount() - 1
         TextView numberListItem;
+
+        // Will display the index of view holder
+        TextView viewHolderIndex;
 
         /**
          * Constructor for our ViewHolder. Within this constructor, we get a reference to our
@@ -88,6 +117,20 @@ public class NumbersAdapter extends RecyclerView.Adapter<NumbersAdapter.NumberVi
             super(itemView);
 
             numberListItem = itemView.findViewById(R.id.tv_number);
+
+            viewHolderIndex = itemView.findViewById(R.id.tv_view_holder_instance);
+
+            itemView.setOnClickListener(this);
+        }
+
+        /**
+         * Called whenever a user clicks on an item in the list.
+         * @param view The View that was clicked
+         */
+        @Override
+        public void onClick(View view) {
+            int id = getAdapterPosition();
+            mOnClickListener.onListItemClick(id);
         }
     }
 }
